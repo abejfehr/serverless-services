@@ -1,0 +1,20 @@
+service: github-authentication
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+
+package:
+  exclude:
+    - .git/**
+
+functions:
+  callback:
+    handler: handler.callback
+    memorySize: 256
+    timeout: 15
+    events:
+      - http:
+          path: callback
+          method: get
+          integration: lambda-proxy
