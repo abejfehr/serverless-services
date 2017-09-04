@@ -37,6 +37,15 @@ functions:
           method: get
           cors: true
           integration: lambda-proxy
+  # users:
+  #   handler: handler.users
+  #   memorySize: 256
+  #   timeout: 15
+  #   events:
+  #     - http:
+  #         path: users
+  #         method: get
+  #         integration: lambda-proxy
 
 resources:
   Resources:
