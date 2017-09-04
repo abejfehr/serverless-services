@@ -1,29 +1,36 @@
 'use strict';
 
-const rp = require('request-promise');
-const qs = require('querystring');
+const AWS = require('aws-sdk');
+const Authenticator = require('./handlers/authenticationHandler');
 
-module.exports.callback = (event, context, callback) => {  
-  const form = {
-    client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET,
-    code: event.queryStringParameters.code,
-  }
+const dynamo = new AWS.DynamoDB.DocumentClient();
+let authenticator = new Authenticator(dynamo);
 
-  rp.post({ url: process.env.URL, form: form }).then((body, response, error) => {
-    console.log(`Body: ${body}`);
-    
-    if (error) {
-      console.log(error);
-    } else {
-      const response = {
-        statusCode: 200,
-        body: JSON.stringify({
-          message: qs.parse(body),
-        }),
-      };
+module.exports.callback = (event, context, callback) => {
+  authenticator.getAccessToken(event.queryStringParameters.code)
+    .then((token) => {
+      authenticator.getUserData(token)
+        .then((user) => {
+          const timestamp = new Date().getTime();
+          const params = {
+            TableName: process.env.DYNAMODB_TABLE,
+            Item: {
+              id: user.id,
+              accessToken: token.access_token,
+              scope: token.scope.split(','),
+              tokenType: token.token_type,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+            },
+          };
 
-      callback(null, response);
-    }
-  });
+          authenticator.save(params, callback);
+        })
+        .catch((error) => {
+          callback(error);
+        });
+    })
+    .catch((error) => {
+      callback(error);
+    })
 };

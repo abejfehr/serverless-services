@@ -2,10 +2,22 @@ service: github-authentication
 
 provider:
   name: aws
+  runtime: nodejs6.10
   environment:
     CLIENT_ID: ${file(./serverless.env.yml):dev.CLIENT_ID}
     CLIENT_SECRET: ${file(./serverless.env.yml):dev.CLIENT_SECRET}
-  runtime: nodejs6.10
+    APPLICATION_NAME: hoverboots-dev
+    DYNAMODB_TABLE: ${self:service}-users-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 package:
   exclude:
@@ -15,11 +27,32 @@ functions:
   callback:
     handler: handler.callback
     environment:
-      URL: https://github.com/login/oauth/access_token
+      TOKEN_URL: https://github.com/login/oauth/access_token
+      USER_URL: https://api.github.com/user
     memorySize: 256
     timeout: 15
     events:
       - http:
           path: callback
           method: get
+          cors: true
           integration: lambda-proxy
+
+resources:
+  Resources:
+    UsersDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: N
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
