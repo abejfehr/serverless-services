@@ -1,12 +1,16 @@
 'use strict';
 
-module.exports.endpoint = (event, context, callback) => {
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: `Hello, the current time is ${new Date().toTimeString()}.`,
-    }),
-  };
+const AWS = require('aws-sdk');
+const rp = require('request-promise');
 
-  callback(null, response);
+const s3 = new AWS.S3();
+
+module.exports.endpoint = (event, context, callback) => {
+  s3.listBuckets({}, (error, data) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log(data);
+    }
+  });
 };
