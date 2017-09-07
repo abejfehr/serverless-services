@@ -24,28 +24,40 @@ package:
     - .git/**
 
 functions:
+  get:
+    handler: users/get.get  
+    events:
+      - http:
+          path: users/{id}
+          method: get
+          integration: lambda-proxy
+          cors: true
+  update:
+    handler: users/update.update
+    events:
+      - http:
+          path: users/{id}
+          method: put
+          integration: lambda-proxy
+          cors: true
+  delete:
+    handler: users/delete.delette
+    events:
+      - http:
+          path: users/{id}
+          method: delete
+          cors: true
   callback:
     handler: handler.callback
     environment:
       TOKEN_URL: https://github.com/login/oauth/access_token
       USER_URL: https://api.github.com/user
-    memorySize: 256
-    timeout: 15
     events:
       - http:
           path: callback
           method: get
           cors: true
           integration: lambda-proxy
-  # users:
-  #   handler: handler.users
-  #   memorySize: 256
-  #   timeout: 15
-  #   events:
-  #     - http:
-  #         path: users
-  #         method: get
-  #         integration: lambda-proxy
 
 resources:
   Resources:

@@ -1,0 +1,12 @@
+{
+  "name": "get-s3-buckets",
+  "version": "1.0.0",
+  "description": "Example demonstrates how to setup a simple HTTP GET endpoint",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.110.0",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1"
+  }
+}
